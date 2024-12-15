@@ -28,8 +28,11 @@ class Result[T]:
     def error(self) -> str:
         return str(self._error)
 
-    def unwrap(self) -> Union[T, Exception]:
-        return self._value if self.is_ok() else self._error
+    def exception(self) -> Exception:
+        return self._error
+
+    def unwrap(self) -> Union[T, str]:
+        return self._value if self.is_ok() else self.error()
 
     def unwrap_or(self, default: T) -> T:
         return self._value if self.is_ok() else default

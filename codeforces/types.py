@@ -1,24 +1,29 @@
 from plugins.others import *
+from plugins.types import *
 
 
-class Problem:
+class Problem(ProblemType):
     def __init__(self, data):
         """
-        contestId： 比赛id
-        index：题目序号（如：A、B、C。。。）
         name：题目名称
+        contestId：比赛id
+        index：题目序号（如：A、B、C。。。）
         rating：题目在cf上的rating
         tags：题目tag
         """
 
+        super().__init__(data.get("name"))
+
         self.contestId = data.get('contestId')
         self.index = data.get('index')
-        self.name = data.get('name')
         self.rating = data.get('rating')
         self.tags = data.get('tags')
 
+    def get_link(self):
+        return f'https://codeforces.com/contest/{self.contestId}/problem/{self.index}'
 
-class Results:
+
+class Submission(SubmissionType):
     def __init__(self, data):
         """
         id：提交id
@@ -32,6 +37,7 @@ class Results:
         participantType：参加模式（练习、参赛者、VP）
         submitter：提交者，可以是一个队
         teamName：队名
+
         time：提交时间（北京时间）
         """
 
@@ -51,5 +57,19 @@ class Results:
             if "teamName" in data['author']:
                 self.teamName = data['author']['teamName']
 
-        if self.creationTimeSeconds:
-            self.time = get_time(self.creationTimeSeconds)
+        if self.creationTimeSeconds is not None:
+            super().__init__(get_time(self.creationTimeSeconds))
+        else:
+            super().__init__(None)
+
+    def is_solved(self) -> bool:
+        return self.verdict == 'OK'
+
+    def get_result(self) -> str:
+        return self.verdict
+
+    def get_problem_id(self) -> str:
+        return self.problem.name
+
+    def get_problem_link(self) -> str:
+        return self.problem.get_link()

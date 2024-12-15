@@ -1,11 +1,10 @@
 import botpy
 import os
+import view
 
 from botpy import logging
 from botpy.ext.cog_yaml import read
 from botpy.message import GroupMessage, Message
-
-from view import *
 from plugins.commands import *
 
 test_config = read(os.path.join(os.path.dirname(__file__), "config.yaml"))
@@ -13,7 +12,8 @@ _log = logging.get_logger()
 
 COMMAND = f"""
 {Commands.help}
-{Commands.CF_recent_ac} <cf名称> <查询提交个数>
+{Commands.CF_recent_ac} <cf用户名称> <查询提交个数>
+{Commands.AT_random_problem_by_index} <选择场次: (abc, arc)> <序号: (A,B,C,D,E,F,G)> <at用户名称> <是否可以抽已经ac的题: (0,1)>
 """
 
 CANNOT_FIND_RESPONSE = f"""找不到对应指令哦。
@@ -33,11 +33,13 @@ class MyClient(botpy.Client):
 
     @staticmethod
     async def _api_config(content_list: list[str]):
-        response = ''
+        response: str = ''
         # 配置命令映射
         if content_list[0].startswith('/'):
             if content_list[0] == Commands.CF_recent_ac:
-                response += await handle_user_ac_problems(content_list)
+                response += (await view.user_cf_ac_problems(content_list)).unwrap()
+            elif content_list[0] == Commands.AT_random_problem_by_index:
+                response += (await view.at_random_problem_by_index(content_list)).unwrap()
             elif content_list[0] == Commands.help:
                 response += f"以下为可用指令：\n{COMMAND}\n"
             else:
@@ -49,11 +51,10 @@ class MyClient(botpy.Client):
     @staticmethod
     async def on_at_message_create(message: Message):
         # 获取命令
-        content_list: list[str] = message.content.lstrip(" ").split(" ")
+        content_list: list[str] = message.content.lstrip(" ").split()
         content_list = content_list[1:]  # 第一个是一个莫名其妙的对象
 
-        response: str = ''
-        response += await MyClient._api_config(content_list)
+        response: str = await MyClient._api_config(content_list)
 
         # 机器人回复
         await message.reply(content=response)
@@ -61,9 +62,9 @@ class MyClient(botpy.Client):
 
     async def on_group_at_message_create(self, message: GroupMessage):
         # 获取命令
-        content_list: list[str] = message.content.lstrip(" ").split(" ")
+        content_list: list[str] = message.content.lstrip(" ").split()
 
-        response: str = '\n'  # 机器人发送信息，默认首行空掉
+        response: str = '\n'
         response += await MyClient._api_config(content_list)
 
         # 机器人回复

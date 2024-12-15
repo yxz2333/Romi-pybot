@@ -1,6 +1,15 @@
 class CustomError(Exception):
-    def __init__(self, message):
+    def __init__(self, message="出错了"):
         self.message = message
+
+
+class CommandError(CustomError):
+    def __init__(self, command):
+        super().__init__("指令用法错误")
+        self.command = command
+
+    def __str__(self):
+        return f"{self.command}: {self.message}"
 
 
 class QueryError(CustomError):
